@@ -3,7 +3,7 @@
 This is a monorepo built with [Turborepo](https://turbo.build/repo) that includes:
 
 - `apps/frontend`: A ReactJS + TypeScript web application.
-- `apps/backend`: A Django + Django Ninja API server.
+- `apps/backend`: A Django API server.
 
 ## 🧱 Structure
 
