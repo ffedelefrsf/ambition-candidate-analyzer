@@ -1,0 +1,9 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "source venv/bin/activate && python manage.py runserver",
+    "format": "black .",
+    "typecheck": "source venv/bin/activate && mypy ."
+  }
+}
