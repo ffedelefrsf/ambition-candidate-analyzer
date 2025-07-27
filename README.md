@@ -11,7 +11,7 @@ This is a monorepo built with [Turborepo](https://turbo.build/repo) that include
 personal-accountant/
 ├── apps/
 │   ├── frontend/       # ReactJS Vite app
-│   └── backend/   # Django Ninja API
+│   └── backend/        # Django API
 ├── turbo.json
 ├── package.json
 ```
