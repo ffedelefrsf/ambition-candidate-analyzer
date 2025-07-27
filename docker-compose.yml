@@ -17,7 +17,7 @@ services:
       dockerfile: apps/backend/Dockerfile
     volumes:
       - ./apps/backend:/app
-      - ./media:/app/media
+      - ./apps/backend/media:/app/media
     ports:
       - "8000:8000"
     env_file:
