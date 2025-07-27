@@ -2,6 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "scripts": {
+    "add": "bash -c 'source venv/bin/activate && pip install \"$1\" && pip freeze > requirements.txt'",
     "dev": "source venv/bin/activate && python manage.py runserver",
     "format": "black .",
     "typecheck": "source venv/bin/activate && mypy ."

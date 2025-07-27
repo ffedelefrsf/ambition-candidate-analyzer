@@ -1,0 +1,129 @@
+import json
+import os
+from django.http import JsonResponse
+import openai
+import pdfplumber
+from django.conf import settings
+from dotenv import load_dotenv
+from pydantic import ValidationError
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+
+from open_ai_helper.index import get_user_message, system_message
+from open_ai_helper.schema import CandidateEvaluation
+from candidates.models import Candidate
+from .models import Career
+from .serializers import CareerSerializer
+
+
+class CareerListView(APIView):
+    def get(self, request):
+        careers = Career.objects.all()
+        serializer = CareerSerializer(careers, many=True)
+        return Response(serializer.data)
+
+
+class CareerCreateView(APIView):
+    def post(self, request):
+        serializer = CareerSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CareerDeleteView(APIView):
+    def delete(self, request, pk):
+        career = get_object_or_404(Career, pk=pk)
+        career.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CareerFindCandidate(APIView):
+    def get(self, request, pk):
+        load_dotenv()
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+        career = get_object_or_404(Career, pk=pk)
+        candidates = Candidate.objects.all()
+        candidates_array = []
+        for candidate in candidates:
+            resume_path = os.path.join(
+                settings.MEDIA_ROOT, "resumes", candidate.resume_id
+            )
+            with pdfplumber.open(resume_path) as pdf:
+                resume_text = ""
+                for page in pdf.pages:
+                    resume_text += page.extract_text() or ""
+            candidate_object = {
+                "name": candidate.name,
+                "expected_salary_per_hour": candidate.expected_salary,
+                "resume_text": resume_text,
+            }
+            candidates_array.append(candidate_object)
+
+        evaluation_input = {
+            "career": {
+                "position": career.position,
+                "description": career.description,
+                "requirements": career.requirements,
+                "nice_to_have": career.nice_to_have,
+                "rate_range": career.rate_range,
+            },
+            "candidates": candidates_array,
+        }
+        try:
+            user_message = get_user_message(evaluation_input)
+            print(f"system_message: { system_message }")
+            print(f"user_message: { user_message }")
+
+            # response = openai.ChatCompletion.create(
+            #     model="gpt-4o-mini",
+            #     messages=[system_message, user_message],
+            #     temperature=0.3,
+            # )
+            # response_text = response.choices[0].message.content
+            response = {
+                "bestCandidate": "Fausto Fedele",
+                "reasons": [
+                    "Extensive full stack experience with React, NestJS, and Django",
+                    "Strong product-oriented mindset with user-centric development",
+                    "Proven leadership and mentoring skills",
+                    "Excellent English communication (C1)",
+                    "Hands-on experience with Tailwind, Docker, AWS, and Figma",
+                    "Experience with observability and monitoring tools",
+                    "Demonstrated autonomy and delivery ownership",
+                    "Worked on high-impact SEO and CWV improvements",
+                    "Experience with multiple startups and large-scale projects",
+                    "Extremely competitive salary expectation ($10/hr)",
+                ],
+                "bestAlternative": "Jane Doe",
+                "alternativeReasons": [
+                    "Solid resume with similar stack experience",
+                    "English proficiency",
+                    "Worked in collaborative environments",
+                    "Salary expectation ($25/hr) still below career rate range",
+                    "Some experience with Figma and Docker",
+                    "Relevant remote work experience",
+                    "Good educational background",
+                    "Likely to grow with mentorship",
+                    "Resume shows generalist strengths",
+                    "Potential fit with additional support",
+                ],
+            }
+            response_text = json.dumps(response, indent=2)
+            try:
+                result = CandidateEvaluation.model_validate_json(response_text)
+                print(f"Result: {result}")
+                return JsonResponse(result.model_dump(), status=200)
+            except ValidationError as ve:
+                print("Pydantic validation failed:", ve)
+                print("Raw response:", response_text)
+                return JsonResponse({"error": "Something went wrong"}, status=500)
+            except Exception as e:
+                print("Unexpected error:", e)
+                return JsonResponse({"error": "Something went wrong"}, status=500)
+        except Exception as e:
+            print(f"Error on model evaluation: {e}")
+            return JsonResponse({"error": "Something went wrong"}, status=500)
