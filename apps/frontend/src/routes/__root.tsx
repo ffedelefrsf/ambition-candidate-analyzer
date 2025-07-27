@@ -31,19 +31,19 @@ function Root() {
         <nav className="flex flex-1 items-center gap-4 text-sm font-medium">
           <Link
             to="/"
-            className="dark:font-white [&.active]:text-primary-light hover:text-primary text-xl font-black hover:underline"
+            className="[&.active]:text-primary-light hover:text-primary text-xl font-black hover:underline dark:text-white"
           >
-            Home
+            <img src="/ambition-favicon-32x32.png" height={32} width={32} />
           </Link>
           <Link
             to="/careers"
-            className="dark:font-white [&.active]:text-primary-light hover:text-primary text-xl font-black hover:underline"
+            className="[&.active]:text-primary-light hover:text-primary text-xl font-black hover:underline dark:text-white"
           >
             Careers
           </Link>
           <Link
             to="/candidates"
-            className="dark:font-white [&.active]:text-primary-light hover:text-primary text-xl font-black hover:underline"
+            className="[&.active]:text-primary-light hover:text-primary text-xl font-black hover:underline dark:text-white"
           >
             Candidates
           </Link>
