@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+  --bg-gray-900: #101828;
+}
+
+html.dark {
+  background-color: var(--bg-gray-900);
+}
+
+@theme {
+  --color-primary-light: var(--color-blue-300);
+  --color-primary: var(--color-blue-500);
+  --color-primary-dark: var(--color-blue-700);
+  --color-primary-darker: var(--color-blue-800);
+}
+
+@layer components {
+  #root {
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+    color: var(--color-gray-700);
+  }
+  p {
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+  }
+  h1 {
+    font-size: var(--text-2xl--line-height);
+    font-family: var(--font-sans);
+    font-weight: var(--font-weight-semibold);
+  }
+  h2 {
+    font-size: var(--text-xl);
+    font-family: var(--font-sans);
+    font-weight: var(--font-weight-semibold);
+  }
+}
