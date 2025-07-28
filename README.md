@@ -1,5 +1,17 @@
 # Ambition Candidate Analyzer
 
+This tool is a WIP. It is capable of finding the best candidate for an opening position.
+The included features are:
+
+- Candidate dashboard and creation requesting name, expected salary and resume in PDF format. Deletion is also available plus the ability to download the candidate resume, while Edit feature was cut off from MVP.
+- Careers dashboard (creation, edition and deletion out of the MVP, however there is available endpoints to perform creations and deletions)
+- OpenAI 4o-mini agent in charge of evaluating:
+  - All data coming from resumes
+  - Expected salary amounts
+  - Opening description, requirements, nice to have and rate range
+
+In this example the company [Ambition](https://ambition.com/) was used as a reference since they were the ones who motivated me to create this small project.
+
 This is a monorepo built with [Turborepo](https://turbo.build/repo) that includes:
 
 - `apps/frontend`: A ReactJS + TypeScript web application.
