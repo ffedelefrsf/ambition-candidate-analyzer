@@ -1,7 +1,6 @@
-import json
 import os
 from django.http import JsonResponse
-import openai
+from openai import OpenAI
 import pdfplumber
 from django.conf import settings
 from dotenv import load_dotenv
@@ -18,7 +17,7 @@ from .models import Career
 from .serializers import CareerSerializer
 
 
-# TODO: Add unit tests for these, specially the openai method, mocking that package
+# TODO: Add unit tests for these, especially the openai method, mocking that package
 class CareerListView(APIView):
     def get(self, request):
         careers = Career.objects.all()
@@ -47,12 +46,15 @@ class CareerReadOrDeleteView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+# TODO: This probably deserves its own app
 class CareerFindCandidate(APIView):
     def get(self, request, pk):
         load_dotenv()
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         career = get_object_or_404(Career, pk=pk)
         candidates = Candidate.objects.all()
+        if len(candidates) == 0:
+            return JsonResponse({"error": "No candidates"}, status=500)
         candidates_array = []
         for candidate in candidates:
             resume_path = os.path.join(
@@ -81,46 +83,23 @@ class CareerFindCandidate(APIView):
         }
         try:
             user_message = get_user_message(evaluation_input)
-            print(f"system_message: { system_message }")
-            print(f"user_message: { user_message }")
 
-            # response = openai.ChatCompletion.create(
-            #     model="gpt-4o-mini",
-            #     messages=[system_message, user_message],
-            #     temperature=0.3,
-            # )
-            # response_text = response.choices[0].message.content
-            response = {
-                "bestCandidate": "Fausto Fedele",
-                "reasons": [
-                    "Extensive full stack experience with React, NestJS, and Django",
-                    "Strong product-oriented mindset with user-centric development",
-                    "Proven leadership and mentoring skills",
-                    "Excellent English communication (C1)",
-                    "Hands-on experience with Tailwind, Docker, AWS, and Figma",
-                    "Experience with observability and monitoring tools",
-                    "Demonstrated autonomy and delivery ownership",
-                    "Worked on high-impact SEO and CWV improvements",
-                    "Experience with multiple startups and large-scale projects",
-                    "Extremely competitive salary expectation ($10/hr)",
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    system_message,
+                    user_message,
                 ],
-                "bestAlternative": "Jane Doe",
-                "alternativeReasons": [
-                    "Solid resume with similar stack experience",
-                    "English proficiency",
-                    "Worked in collaborative environments",
-                    "Salary expectation ($25/hr) still below career rate range",
-                    "Some experience with Figma and Docker",
-                    "Relevant remote work experience",
-                    "Good educational background",
-                    "Likely to grow with mentorship",
-                    "Resume shows generalist strengths",
-                    "Potential fit with additional support",
-                ],
-            }
-            response_text = json.dumps(response, indent=2)
+                temperature=0.3,
+            )
+            response_text = response.choices[0].message.content
             try:
-                result = CandidateEvaluation.model_validate_json(response_text)
+                cleaned_json = response_text.strip()
+                if cleaned_json.startswith("```json"):
+                    cleaned_json = cleaned_json.removeprefix("```json").strip()
+                if cleaned_json.endswith("```"):
+                    cleaned_json = cleaned_json.removesuffix("```").strip()
+                result = CandidateEvaluation.model_validate_json(cleaned_json)
                 print(f"Result: {result}")
                 return JsonResponse(result.model_dump(), status=200)
             except ValidationError as ve:

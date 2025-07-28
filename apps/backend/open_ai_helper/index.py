@@ -1,7 +1,9 @@
 import json
 
 
-system_message = """
+system_message = {
+    "role": "system",
+    "content": """
 You are a hiring assistant helping a startup select the best candidate for a specific IT position (e.g., Full Stack Software Engineer, DevOps Engineer, Backend Developer, etc.).
 
 Your job is to carefully evaluate each candidate against:
@@ -23,7 +25,8 @@ Your output must be a valid JSON object in the following format:
   "bestAlternative": string,
   "alternativeReasons": string[]  // Up to 10 short bullet points
 }
-""".strip()
+""".strip(),
+}
 
 
 def get_user_message(evaluation_input):
