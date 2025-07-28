@@ -20,9 +20,15 @@ ambition-candidate-analyzer/
 
 ### Prerequisites
 
+#### Option 1: Docker
+
+- [Docker](https://docs.docker.com/desktop/setup/install/mac-install/)
+
+#### Option 2: Local
+
 - Node.js (`nvm use` after installing nvm)
 - [Python 3.x](https://www.python.org/downloads/macos/)
-- `postgresql` (`brew install postgresql`) or [Docker](https://docs.docker.com/desktop/setup/install/mac-install/)
+- `postgresql` (`brew install postgresql`)
 - `pnpm` (`npm install -g pnpm`)
 
 ### Create an environment variable files
