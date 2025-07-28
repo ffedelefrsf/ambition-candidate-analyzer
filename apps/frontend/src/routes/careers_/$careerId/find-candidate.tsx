@@ -56,6 +56,7 @@ type State = {
   reasons: string[];
   bestAlternative: string;
   alternativeReasons: string[];
+  error?: { message: string };
 };
 
 class FindCandidate extends React.Component<Props, State> {
@@ -82,6 +83,11 @@ class FindCandidate extends React.Component<Props, State> {
           ...prevState,
           ...result,
         }));
+      } catch (error: unknown) {
+        this.setState((prevState) => ({
+          ...prevState,
+          error: error as Error,
+        }));
       } finally {
         this.setState((prevState) => ({
           ...prevState,
@@ -94,8 +100,14 @@ class FindCandidate extends React.Component<Props, State> {
   render() {
     const { description, niceToHave, position, rateRange, requirements } =
       this.props.career;
-    const { bestCandidate, reasons, bestAlternative, alternativeReasons, loading } =
-      this.state;
+    const {
+      bestCandidate,
+      error,
+      reasons,
+      bestAlternative,
+      alternativeReasons,
+      loading,
+    } = this.state;
 
     const listedRequirements = requirements.split(',').map((r) => r.trim());
     const listedNiceToHave = niceToHave.split(',').map((n) => n.trim());
@@ -142,9 +154,12 @@ class FindCandidate extends React.Component<Props, State> {
         </section>
 
         <div className="mt-10">
-          {/* TODO: Improve skeletons height since they are causing a ton of shift here */}
-          {loading ? (
+          {/* TODO: Improve error handling and maybe give the chance to run again given this is calling a model and is kind of unpredictable */}
+          {error ? (
+            <span className="font-bold text-red-700">Error: {error.message}</span>
+          ) : loading ? (
             <div className="grid gap-6">
+              {/* TODO: Improve skeletons height since they are causing a ton of shift here */}
               {/* Skeleton block for best candidate */}
               <div className="animate-pulse space-y-3 rounded-lg bg-gray-200 p-6 dark:bg-gray-700">
                 <div className="h-6 w-1/2 rounded bg-gray-300 dark:bg-gray-600" />
