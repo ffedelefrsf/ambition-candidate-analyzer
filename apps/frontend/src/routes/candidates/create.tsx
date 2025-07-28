@@ -5,6 +5,9 @@ import React, {
 } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 
+// TODO: Make env its own package that pre-validates required env vars using schema validation
+const { VITE_API_BASE_URL } = import.meta.env;
+
 export const Route = createFileRoute('/candidates/create')({
   component: () => <CreateCandidateForm />,
 });
@@ -15,9 +18,11 @@ type State = {
     name?: string;
     expectedSalary?: string;
     resume?: string;
+    general?: string;
   };
 };
 
+// TODO: Add unit tests for this component to simulate all use cases and make sure there are no gaps
 class CreateCandidateForm extends React.Component<unknown, State> {
   private formRef = React.createRef<HTMLFormElement>();
   private fileInputRef = React.createRef<HTMLInputElement>();
@@ -59,7 +64,7 @@ class CreateCandidateForm extends React.Component<unknown, State> {
     this.fileInputRef.current?.click();
   };
 
-  handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+  handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
     const form = this.formRef.current;
@@ -68,26 +73,40 @@ class CreateCandidateForm extends React.Component<unknown, State> {
     }
     const formData = new FormData(form);
     const name = formData.get('name');
-    const expectedSalary = formData.get('expectedSalary');
+    const expectedSalary = formData.get('expectedSalary') as string | null;
+    if (!expectedSalary) {
+      formData.delete('expectedSalary');
+    }
     const resumeFile = formData.get('resume') as File | null;
 
     const errors: State['errors'] = {};
     if (!name) errors.name = 'Name is required';
-    if (!expectedSalary) errors.expectedSalary = 'Expected salary is required';
+    if (
+      expectedSalary &&
+      (!/^\d+$/.test(expectedSalary) || !(Number(expectedSalary) > 0))
+    )
+      errors.expectedSalary = 'Enter a valid expected salary (integer number)';
     if (!resumeFile || resumeFile.size <= 0) errors.resume = 'Resume is required';
-
     if (!resumeFile || Object.keys(errors).length > 0) {
       this.setState({ errors });
       return;
     }
 
-    // Simulate success
-    console.log('Submitted:', {
-      name,
-      expectedSalary,
-      resumeFile,
+    const response = await fetch(`${VITE_API_BASE_URL}/candidates/create`, {
+      method: 'POST',
+      body: formData,
     });
-    alert('Candidate created (simulated)');
+    if (response.status === 201) {
+      // TODO: this is not using SPA features because of using Class components, please
+      // consider rotating to Functional components and hooks so we can leverage Router Link
+      // TODO: Improve success state. Consider using Toasts or similar
+      window.location.href = '/candidates';
+    }
+    this.setState({
+      errors: {
+        general: 'Something went wrong. Please try again.',
+      },
+    });
   };
 
   render() {
@@ -98,7 +117,6 @@ class CreateCandidateForm extends React.Component<unknown, State> {
         <h2 className="mb-4 text-2xl font-bold">Create Candidate</h2>
 
         <form ref={this.formRef} onSubmit={this.handleSubmit} className="space-y-6">
-          {/* Name Field */}
           <div>
             <label className="mb-1 block cursor-pointer font-medium" htmlFor="name">
               Name
@@ -112,7 +130,6 @@ class CreateCandidateForm extends React.Component<unknown, State> {
             {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
           </div>
 
-          {/* Expected Salary Field */}
           <div>
             <label
               className="mb-1 block cursor-pointer font-medium"
@@ -131,7 +148,6 @@ class CreateCandidateForm extends React.Component<unknown, State> {
             )}
           </div>
 
-          {/* Resume Upload */}
           <div>
             <label className="mb-1 block cursor-pointer font-medium" htmlFor="resume">
               Resume (PDF)
@@ -175,6 +191,9 @@ class CreateCandidateForm extends React.Component<unknown, State> {
           >
             Create Candidate
           </button>
+          {errors.resume && (
+            <p className="mt-1 text-sm text-red-500">{errors.general}</p>
+          )}
         </form>
       </div>
     );

@@ -25,6 +25,7 @@ function Root() {
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
+  // TODO: Add error boundary. At least a top level one. Right now an error will show a blank page on prod and an ugly error in dev
   return (
     <>
       <header className="mb-2 flex justify-between bg-gray-100 px-4 shadow-md dark:bg-gray-800">
@@ -51,7 +52,7 @@ function Root() {
         <div className="mx-auto flex max-w-7xl justify-end p-4">
           <button
             onClick={toggleTheme}
-            className="text-2xl transition hover:scale-110"
+            className="cursor-pointer text-2xl transition hover:scale-110"
             title="Toggle theme"
           >
             {theme === 'dark' ? '☀️' : '🌙'}

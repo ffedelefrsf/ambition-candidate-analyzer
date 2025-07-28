@@ -2,18 +2,26 @@ import React from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Table } from '../../components/Table';
 
+// TODO: Make env its own package that pre-validates required env vars using schema validation// TODO: Make env its own package that pre-validates required env vars using schema validation
+const { VITE_API_BASE_URL } = import.meta.env;
+
 export const Route = createFileRoute('/candidates/')({
   component: () => <CandidatesPage />,
 });
 
 type State = {
-  candidates: {
-    id: string;
-    name: string;
-    profileShortSummary: string;
-    salaryExpectation?: string;
+  candidates: (Omit<RawCandidate, 'expected_salary'> & {
+    expected_salary_per_hour: string;
     resumeURL: string;
-  }[];
+  })[];
+  isLoading: boolean;
+};
+
+type RawCandidate = {
+  id: string;
+  name: string;
+  expected_salary?: string;
+  resume_id: string;
 };
 
 type TableCandidate = Omit<State['candidates'][number], 'resumeURL'>;
@@ -22,26 +30,37 @@ class CandidatesPage extends React.Component<unknown, State> {
   constructor(props: unknown) {
     super(props);
     this.state = {
-      candidates: [
-        {
-          id: '1',
-          name: 'Jane Doe',
-          profileShortSummary: 'Frontend specialist with 5 years of experience.',
-          salaryExpectation: '$30/hr',
-          resumeURL: '/resumes/jane_doe.pdf',
-        },
-        {
-          id: '2',
-          name: 'John Smith',
-          profileShortSummary: 'Frontend specialist with 5 years of experience.',
-          resumeURL: '/resumes/john_smith.pdf',
-        },
-      ],
+      candidates: [],
+      isLoading: true,
     };
   }
 
-  handleRemoval = (candidateId: string) => {
-    console.log('removing', candidateId);
+  componentDidMount(): void {
+    fetch(`${VITE_API_BASE_URL}/candidates/`)
+      .then((response) => response.json())
+      // TODO: Schema-validate the response
+      .then((candidates) => {
+        this.setState((prevState) => ({
+          ...prevState,
+          isLoading: false,
+          candidates: candidates.map((candidate: RawCandidate) => ({
+            ...candidate,
+            expected_salary_per_hour: `$ ${candidate.expected_salary}`,
+            resumeURL: `${VITE_API_BASE_URL}/candidates/${candidate.id}/download-resume`,
+          })),
+        }));
+      });
+  }
+
+  handleRemoval = async (candidateId: string) => {
+    const response = await fetch(`${VITE_API_BASE_URL}/candidates/${candidateId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      // TODO: Improve error handling
+      alert("Couldn't remove candidate");
+      return;
+    }
     this.setState((prevState) => ({
       ...prevState,
       candidates: prevState.candidates.filter(
@@ -51,6 +70,11 @@ class CandidatesPage extends React.Component<unknown, State> {
   };
 
   render() {
+    // TODO: Improve loading state. Skeletons or loader
+    if (this.state.isLoading) {
+      return <span>Loading...</span>;
+    }
+
     return (
       <div className="min-h-screen bg-white p-6 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
         <header className="mb-4 flex items-center justify-between">
@@ -73,6 +97,7 @@ class CandidatesPage extends React.Component<unknown, State> {
             delete copy.resumeURL;
             return copy;
           })}
+          // TODO: Extend Edit as well here
           additionalCustomRow={(index: number) => (
             <div className="flex gap-4">
               <a
