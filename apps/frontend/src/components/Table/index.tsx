@@ -5,10 +5,10 @@ type Props<T> = {
   additionalCustomRow?: React.ReactNode | ((idx: number) => React.ReactNode);
 };
 
-function camelToTitleCase(camel: string) {
-  if (!camel) return '';
+function snakeCaseToTitleCase(snakeCase: string) {
+  if (!snakeCase) return '';
 
-  return camel.replace(/([A-Z])/g, ' $1'); // Insert space before capitals
+  return snakeCase.replace(/_/g, ' '); // Insert space before capitals
 }
 
 export class Table<T extends Record<string, string>> extends React.Component<Props<T>> {
@@ -35,7 +35,7 @@ export class Table<T extends Record<string, string>> extends React.Component<Pro
     }, {});
 
     const headers = Object.keys(itemWithAllHeaders);
-    const formattedHeaders = headers.map((key) => camelToTitleCase(key));
+    const formattedHeaders = headers.map((key) => snakeCaseToTitleCase(key));
 
     return (
       <div className="overflow-x-auto">

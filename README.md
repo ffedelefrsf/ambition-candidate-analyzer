@@ -1,4 +1,4 @@
-# Turbo Monorepo
+# Ambition Candidate Analyzer
 
 This is a monorepo built with [Turborepo](https://turbo.build/repo) that includes:
 
@@ -8,7 +8,7 @@ This is a monorepo built with [Turborepo](https://turbo.build/repo) that include
 ## 🧱 Structure
 
 ```
-personal-accountant/
+ambition-candidate-analyzer/
 ├── apps/
 │   ├── frontend/       # ReactJS Vite app
 │   └── backend/        # Django API
@@ -22,9 +22,41 @@ personal-accountant/
 
 - Node.js (`nvm use` after installing nvm)
 - [Python 3.x](https://www.python.org/downloads/macos/)
+- `postgresql` (`brew install postgresql`) or [Docker](https://docs.docker.com/desktop/setup/install/mac-install/)
 - `pnpm` (`npm install -g pnpm`)
 
+### Create an environment variable files
+
+In root folder `/`, create a file called `.env` containing:
+
+```bash
+DEBUG=1
+POSTGRES_DB=ambition_candidate_analyzer
+POSTGRES_USER=root
+POSTGRES_PASSWORD=root
+```
+
+Go to `/apps/frontend` folder and create a file called `.env.development` with the following content:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000/api
+```
+
+Go to `/apps/backend` folder and create a file called `.env` with the following content:
+
+```bash
+OPENAI_API_KEY=
+```
+
 ### Install dependencies
+
+#### Option 1: Docker
+
+```bash
+docker-compose build
+```
+
+#### Option 2: Local
 
 ```bash
 pnpm install
@@ -38,34 +70,23 @@ pip install -r ./requirements.txt
 deactivate
 ```
 
-### Create an environment variable files
-
-Go to `/apps/frontend` folder and create a file called `.env.development` with the following content:
-
-```bash
-API_URL=
-```
-
-Go to `/apps/backend` folder and create a file called `.env` with the following content:
-
-```bash
-OPENAI_API_KEY=
-ENVIRONMENT=develop
-```
-
-_Note: you can grab the corresponding values from [here](https://dashboard.plaid.com/developers/keys)._
-
 ### Start development
+
+#### Option 1: Docker
+
+```bash
+docker-compose up
+```
+
+#### Option 2: Local
 
 ```bash
 pnpm run dev
 ```
 
-### AI APIs integration TBD
-
----
-
 ## 📦 Workspaces
 
-- **Web app**: [apps/web](./apps/web)
+<!-- TODO: Add README for these, including diagrams and more guides -->
+
+- **Web app**: [apps/frontend](./apps/frontend)
 - **API server**: [apps/backend](./apps/backend)

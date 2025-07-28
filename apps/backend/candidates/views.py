@@ -8,10 +8,14 @@ from .models import Candidate
 from .serializers import CandidateSerializer
 
 
+# TODO: Add unit tests for these
 class CandidateListView(APIView):
     def get(self, request):
         candidates = Candidate.objects.all()
         serialized = CandidateSerializer(candidates, many=True)
+        data = serialized.data
+        for item in data:
+            item.pop("resume_id", None)
         return Response(serialized.data)
 
 
@@ -27,6 +31,7 @@ class CandidateCreateView(APIView):
         if file.content_type != "application/pdf":
             return Response({"error": "Only PDF files are allowed"}, status=400)
 
+        # TODO: Replace this local storage by a Cloud Service like AWS S3, Azure/Firebase Storage
         filename = f"{uuid.uuid4().hex}{os.path.splitext(file.name)[1]}"
         path = os.path.join(settings.MEDIA_ROOT, "resumes", filename)
 
@@ -51,6 +56,7 @@ class CandidateCreateView(APIView):
         except Exception as e:
             print(f"Error while creating candidate: { e }")
             if candidate.instance is not None:
+                # Ideally here a SQL transaction that won't commit until the pdf file is stored is used instead of saving and deleting from the database
                 candidate.instance.delete()
             return JsonResponse({"error": "Something went wrong"}, status=500)
 

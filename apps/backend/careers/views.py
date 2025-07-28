@@ -18,6 +18,7 @@ from .models import Career
 from .serializers import CareerSerializer
 
 
+# TODO: Add unit tests for these, specially the openai method, mocking that package
 class CareerListView(APIView):
     def get(self, request):
         careers = Career.objects.all()
@@ -34,7 +35,12 @@ class CareerCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CareerDeleteView(APIView):
+class CareerReadOrDeleteView(APIView):
+    def get(self, request, pk):
+        career = get_object_or_404(Career, pk=pk)
+        serializer = CareerSerializer(career)
+        return Response(serializer.data)
+
     def delete(self, request, pk):
         career = get_object_or_404(Career, pk=pk)
         career.delete()

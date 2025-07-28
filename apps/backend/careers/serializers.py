@@ -5,5 +5,5 @@ from .models import Career
 class CareerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Career
-        fields = "__all__"
+        exclude = ["created_at"]
         read_only_fields = ["id", "created_at"]
